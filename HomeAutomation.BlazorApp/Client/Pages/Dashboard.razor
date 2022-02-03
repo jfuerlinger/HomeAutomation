@@ -1,0 +1,54 @@
+﻿@page "/dashboard"
+
+<PageTitle>Home Automation</PageTitle>
+
+<h1>Home Automation</h1>
+
+<p>Let's automation everything home ...</p>
+
+@if (_lights == null)
+{
+    <p><em>Loading the lights ...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var light in _lights)
+            {
+                <tr>
+                    <td id="@light.Id">@light.Name</td>
+                    <td><button @onclick='() => SendMqttCmdAsync(light, "ON")'>ON</button>&nbsp;<button @onclick='() => SendMqttCmdAsync(light, "OFF")'>OFF</button>&nbsp;<button @onclick='() => SendMqttCmdAsync(light, "TOGGLE")'>TOGGLE</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+<hr>
+
+<ul id="messagesList">
+    @foreach (var message in _messages)
+    {
+        <li>@message</li>
+    }
+</ul>
+
+<style>
+    .light-enabled {
+        background-color: greenyellow !important;
+    }
+
+    .light-disabled {
+        background-color: red !important;
+    }
+</style>
+
+
