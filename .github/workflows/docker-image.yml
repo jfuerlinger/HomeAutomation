@@ -14,5 +14,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: docker login
+      env:
+        DOCKER_USER: ${{secrets.DOCKER_USER}}
+        DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+      run: |
+        docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
     - name: Build the Docker image
-      run: docker build . --file ./HomeAutomation.BlazorApp/Server/Dockerfile --tag jfuerlinger/home-automation:$(date +%s)
+      run: docker build . --file ./HomeAutomation.BlazorApp/Server/Dockerfile --tag ${{secrets.DOCKER_USER}}/home-automation:$(date +%s)
+    - name: Push the Docker image
+      run: docker push ${{secrets.DOCKER_USER}}//home-automation:$(date +%s)
