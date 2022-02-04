@@ -1,6 +1,6 @@
 ﻿
 using HomeAutomation.Core.Contracts.Services;
-using HomeAutomation.Services;
+using HomeAutomation.Services.Mqtt;
 using HomeAutomation.TestDriver;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

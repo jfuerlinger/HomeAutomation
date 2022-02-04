@@ -16,7 +16,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\HomeAutomation.Core\HomeAutomation.Core.csproj" />
-        <ProjectReference Include="..\HomeAutomation.Services\HomeAutomation.Services.csproj" />
+        <ProjectReference Include="..\HomeAutomation.Services.Mqtt\HomeAutomation.Services.Mqtt.csproj" />
     </ItemGroup>
 
 </Project>
