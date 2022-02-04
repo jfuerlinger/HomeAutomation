@@ -8,18 +8,18 @@ namespace HomeAutomation.BlazorApp.Server.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class HomeAutomationController : ControllerBase
+    public class DevicesController : ControllerBase
     {
-        private readonly ILogger<HomeAutomationController> _logger;
+        private readonly ILogger<DevicesController> _logger;
         private readonly IMqttService _mqttService;
         private readonly IDeviceRepository _deviceRepository;
         private readonly IMapper _mapper;
 
-        public HomeAutomationController(
+        public DevicesController(
             IMqttService mqttService,
             IDeviceRepository deviceRepository,
             IMapper mapper,
-            ILogger<HomeAutomationController> logger)
+            ILogger<DevicesController> logger)
         {
             _logger = logger;
             _mqttService = mqttService;
@@ -42,7 +42,7 @@ namespace HomeAutomation.BlazorApp.Server.Controllers
                 return BadRequest("Command is empty!");
             }
 
-            string? topic = _deviceRepository.GetById(id)?.MqttTopic;
+            string? topic = _deviceRepository.GetById(id)?.DeviceTopic;
             if (topic == null)
             {
                 return BadRequest("Unable to determine the topic based on the device id!");

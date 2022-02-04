@@ -20,7 +20,7 @@ namespace HomeAutomation.BlazorApp.Server.BackgroundServices
         public HomeAutomationMonitor(
             IMqttService mqttService,
             IHubContext<HomeAutomationHub> homeAutomationSignalRContext,
-            IDeviceRepository deviceRepository, 
+            IDeviceRepository deviceRepository,
             ILogger<HomeAutomationMonitor> logger)
         {
             _mqttService = mqttService;
@@ -60,6 +60,8 @@ namespace HomeAutomation.BlazorApp.Server.BackgroundServices
             using var subscription = _mqttService.Subscribe(this);
             await _mqttService.InitAsync(stoppingToken);
 
+            await DiscoverEnvironmentAsync(stoppingToken);
+
             int executionCount = 0;
             do
             {
@@ -67,22 +69,44 @@ namespace HomeAutomation.BlazorApp.Server.BackgroundServices
 
                 while (_deviceStateChanges.TryTake(out DeviceStateChanged? item, TimeSpan.FromMilliseconds(100)))
                 {
-                    await NotifyClientsAsync(item);
-                    
+                    await HandleDeviceStateChangedInfoAsync(item);
                 }
+
             } while (await timer.WaitForNextTickAsync(stoppingToken));
         }
 
-        private async Task NotifyClientsAsync(DeviceStateChanged item)
+        private async Task HandleDeviceStateChangedInfoAsync(DeviceStateChanged item)
+        {
+            Device device = _deviceRepository.GetByDeviceTopic(item.DeviceTopic)!;
+
+            if (!device.LastStateCheckedAt.HasValue || device.State != item.State)
+            {
+                device.LastStateCheckedAt = DateTime.UtcNow;
+                device.State = item.State;
+                await NotifyClientsAsync(device, item);
+            }
+         
+            device.LastStateCheckedAt = DateTime.UtcNow;
+        }
+
+        private async Task NotifyClientsAsync(Device device, DeviceStateChanged item)
         {
             _logger.LogInformation($" -------> Monitor: {item.DeviceTopic} -> {item.State}");
 
             await _homeAutomationSignalRContext.Clients.All.SendAsync(
-                "DeviceStateChanged", 
-                _deviceRepository.GetByDeviceTopic(item.DeviceTopic)?.Id, 
+                "DeviceStateChanged",
+                device.Id,
                 item.State);
 
             _logger.LogInformation("SignalR Message sent.");
+        }
+
+        private async Task DiscoverEnvironmentAsync(CancellationToken cancellationToken)
+        {
+            foreach (var device in _deviceRepository.GetAll())
+            {
+                await _mqttService.RequestPowerStateInfo(device.DeviceTopic!, cancellationToken);
+            }
         }
     }
 }

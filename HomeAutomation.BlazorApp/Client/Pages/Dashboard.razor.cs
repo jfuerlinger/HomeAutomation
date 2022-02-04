@@ -28,7 +28,7 @@ namespace HomeAutomation.BlazorApp.Client.Pages
             ArgumentNullException.ThrowIfNull(NavigationManager, nameof(NavigationManager));
             ArgumentNullException.ThrowIfNull(JS, nameof(JS));
 
-            _lights = await Http.GetFromJsonAsync<Light[]>("HomeAutomation");
+            _lights = await Http.GetFromJsonAsync<Light[]>("Devices");
 
             _hubConnection = new HubConnectionBuilder()
                 .WithUrl(NavigationManager.ToAbsoluteUri("/home-automation"))
@@ -50,7 +50,7 @@ namespace HomeAutomation.BlazorApp.Client.Pages
         {
             ArgumentNullException.ThrowIfNull(Http, nameof(Http));
 
-            await Http.PostAsync($"HomeAutomation/{light.Id}/{command}", null);
+            await Http.PostAsync($"Devices/{light.Id}/{command}", null);
         }
 
         public async ValueTask DisposeAsync()
@@ -60,5 +60,8 @@ namespace HomeAutomation.BlazorApp.Client.Pages
                 await _hubConnection.DisposeAsync();
             }
         }
+
+        private string GetCssClassByState(string? state) => state?.ToLower() == "on" ? "light-enabled" : "light-disabled";
+
     }
 }

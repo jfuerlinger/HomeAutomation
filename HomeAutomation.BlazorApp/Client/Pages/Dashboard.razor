@@ -4,7 +4,7 @@
 
 <h1>Home Automation</h1>
 
-<p>Let's automation everything home ...</p>
+<p>Let's automation everything at home ...</p>
 
 @if (_lights == null)
 {
@@ -23,7 +23,7 @@ else
             @foreach (var light in _lights)
             {
                 <tr>
-                    <td id="@light.Id">@light.Name</td>
+                    <td id="@light.Id" class="@GetCssClassByState(light.State)">@light.Name</td>
                     <td><button @onclick='() => SendMqttCmdAsync(light, "ON")'>ON</button>&nbsp;<button @onclick='() => SendMqttCmdAsync(light, "OFF")'>OFF</button>&nbsp;<button @onclick='() => SendMqttCmdAsync(light, "TOGGLE")'>TOGGLE</button></td>
                 </tr>
             }

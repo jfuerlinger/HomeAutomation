@@ -14,6 +14,7 @@ namespace HomeAutomation.Services.Mqtt
     {
         private readonly IMqttClient _mqttClient;
         private readonly List<IObserver<DeviceStateChanged>> _observers;
+        private readonly TasmotaMqttMessageProcessor _mqttMessageProcessor;
         private readonly ILogger<MqttService> _logger;
         private bool _disposedValue;
 
@@ -23,11 +24,11 @@ namespace HomeAutomation.Services.Mqtt
             _mqttClient = new MqttFactory().CreateMqttClient();
             _observers = new List<IObserver<DeviceStateChanged>>();
 
-            var mqttMessageProcessor = new TasmotaMqttMessageProcessor()
+            _mqttMessageProcessor = new TasmotaMqttMessageProcessor()
                     .WithStatusChangeProcessing(true)
                     .WithOverallStatusMessageListening(false)
                     .WithPowerMessageListening(true);
-            mqttMessageProcessor.DeviceStateChanged += (object? sender, DeviceStateChanged e) => _observers.ForEach(observer => observer.OnNext(e));
+            _mqttMessageProcessor.DeviceStateChanged += (object? sender, DeviceStateChanged e) => _observers.ForEach(observer => observer.OnNext(e));
 
             _mqttClient.UseApplicationMessageReceivedHandler(e =>
             {
@@ -41,7 +42,7 @@ namespace HomeAutomation.Services.Mqtt
                 string message = sb.ToString();
                 _logger.LogInformation(message);
 
-                mqttMessageProcessor.ProcessMessage(e.ApplicationMessage);
+                _mqttMessageProcessor.ProcessMessage(e.ApplicationMessage);
             });
         }
 
@@ -62,11 +63,10 @@ namespace HomeAutomation.Services.Mqtt
         }
 
         public async Task PublishAsync(
-            string topic, string command,
+            string topic, string payload,
             CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(topic, nameof(topic));
-            ArgumentNullException.ThrowIfNull(command, nameof(command));
 
             if (!_mqttClient.IsConnected)
             {
@@ -75,12 +75,19 @@ namespace HomeAutomation.Services.Mqtt
 
             if (!cancellationToken.IsCancellationRequested)
             {
-                await _mqttClient.PublishAsync(new MqttApplicationMessageBuilder()
-                .WithTopic(topic)
-                .WithPayload(command)
-                .WithExactlyOnceQoS()
-                .WithRetainFlag()
-                .Build(), cancellationToken);
+                var messageBuilder = new MqttApplicationMessageBuilder()
+                 .WithTopic(topic)
+                 .WithExactlyOnceQoS()
+                 .WithRetainFlag();
+
+                if(!string.IsNullOrWhiteSpace(payload))
+                {
+                    messageBuilder.WithPayload(payload);
+                }
+
+                await _mqttClient.PublishAsync(
+                    messageBuilder.Build(), 
+                    cancellationToken);
             }
         }
 
@@ -140,6 +147,12 @@ namespace HomeAutomation.Services.Mqtt
         {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
+        }
+
+        public async Task RequestPowerStateInfo(string deviceTopic, CancellationToken cancellationToken)
+        {
+            string statusRequestTopic = _mqttMessageProcessor.BuildPowerRequestStatusMessage(deviceTopic);
+            await PublishAsync(statusRequestTopic, string.Empty, cancellationToken);
         }
     }
 }
