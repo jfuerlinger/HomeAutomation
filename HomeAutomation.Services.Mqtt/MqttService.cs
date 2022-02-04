@@ -151,7 +151,7 @@ namespace HomeAutomation.Services.Mqtt
 
         public async Task RequestPowerStateInfo(string deviceTopic, CancellationToken cancellationToken)
         {
-            string statusRequestTopic = _mqttMessageProcessor.BuildPowerRequestStatusMessage(deviceTopic);
+            string statusRequestTopic = TasmotaMqttMessageProcessor.BuildPowerRequestStatusMessage(deviceTopic);
             await PublishAsync(statusRequestTopic, string.Empty, cancellationToken);
         }
     }

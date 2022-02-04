@@ -75,6 +75,6 @@ namespace HomeAutomation.Services.Mqtt.Infrastructure
             DeviceStateChanged?.Invoke(this, new DeviceStateChanged(topic, state));
         }
 
-        internal string BuildPowerRequestStatusMessage(string deviceTopic) => $"cmnd/{deviceTopic}/POWER";
+        internal static string BuildPowerRequestStatusMessage(string deviceTopic) => $"cmnd/{deviceTopic}/POWER";
     }
 }

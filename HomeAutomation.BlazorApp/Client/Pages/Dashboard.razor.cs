@@ -61,7 +61,7 @@ namespace HomeAutomation.BlazorApp.Client.Pages
             }
         }
 
-        private string GetCssClassByState(string? state) => state?.ToLower() == "on" ? "light-enabled" : "light-disabled";
+        private static string GetCssClassByState(string? state) => state?.ToLower() == "on" ? "light-enabled" : "light-disabled";
 
     }
 }
